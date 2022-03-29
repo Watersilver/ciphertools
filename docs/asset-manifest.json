@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/ciphertools/static/css/main.427eb4c8.css",
+    "main.js": "/ciphertools/static/js/main.19b92605.js",
+    "index.html": "/ciphertools/index.html",
+    "main.427eb4c8.css.map": "/ciphertools/static/css/main.427eb4c8.css.map",
+    "main.19b92605.js.map": "/ciphertools/static/js/main.19b92605.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.427eb4c8.css",
+    "static/js/main.19b92605.js"
+  ]
+}
