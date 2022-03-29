@@ -1,4 +1,5 @@
 import matrix14x14pairs from "./dagapeyef/matrix14x14pairs.json"
+import allPermsNoDigrams from "./dagapeyef/allPermutationsNoDigrams.json"
 
 import { observer } from "mobx-react-lite";
 import store from "./store"
@@ -7,19 +8,34 @@ import {forbidAdjacency} from "./utils/constrainedPermute"
 import { useRef, useState } from "react";
 
 import MutableTable from "./MutableTable"
+import Permutations from "./Permutations";
 
 store.plaintext.set({type: "default", content: "D'Agapeyeff"});
 
-let permutationsCount = 0;
-const getPermutations = (matrix: ReadonlyArray<ReadonlyArray<string>>) => {
-  const all: Map<string, ReadonlyArray<ReadonlyArray<string>>> = new Map();
-  forbidAdjacency(matrix, p => {
-    console.log(++permutationsCount);
-    const perm = p.map(key => matrix[key]);
-    all.set(JSON.stringify(perm), perm);
-  });
+type PermutationsType = {
+  readonly matrix: ReadonlyArray<ReadonlyArray<string>>;
+  readonly set: ReadonlySet<ReadonlyArray<number>>;
+}
 
-  return all;
+const getPermutations = (matrix: ReadonlyArray<ReadonlyArray<string>>): PermutationsType => {
+  const result = {
+    matrix: [...[...matrix]],
+    set: new Set<ReadonlyArray<number>>()
+  }
+
+  const perms = new Map<string, ReadonlyArray<number>>();
+  forbidAdjacency(matrix, p => {
+    perms.set(JSON.stringify(p), [...p]);
+  });
+  
+  result.set = new Set<ReadonlyArray<number>>([...perms.values()]);
+
+  console.log({
+    matrix: result.matrix,
+    set: [...result.set]
+  })
+
+  return result;
 }
 
 type Table = {
@@ -32,7 +48,7 @@ type Table = {
 };
 
 const App = observer(() => {
-  const [permutations, setPermutations] = useState<ReadonlyArray<ReadonlyArray<string>>[]>();
+  const [permutations, setPermutations] = useState<PermutationsType>();
 
   const tRef = useRef<Table>();
 
@@ -98,7 +114,7 @@ const App = observer(() => {
           });
 
           setPermutations(
-            [...getPermutations(matrix)].map(([_, permutation]) => permutation)
+            getPermutations(matrix)
           );
         }}
         style={{
@@ -109,18 +125,38 @@ const App = observer(() => {
         Compute Permutations
       </button>
     </div>
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: 5
-      }}
-    >
+    <div style={{backgroundColor: "white"}}>
+      <div
+        style={{
+          padding: 10,
+          fontSize: "large",
+          fontWeight: "bold"
+        }}
+      >
+        Cached permutations
+      </div>
+      <button
+        onClick={() => {
+          setPermutations({
+            matrix: allPermsNoDigrams.matrix,
+            set: new Set(allPermsNoDigrams.set)
+          });
+        }}
+        style={{
+          margin: 20,
+          height: 32
+        }}
+      >
+        D'Agapeyef
+      </button>
+    </div>
+    <div>
       {
         !permutations ?
-        "Awaiting computation..." :
-        permutations.length > 0 ?
-        [...permutations].map(permutation => <div key={JSON.stringify(permutation)}>{permutation}</div>) :
-        "Empty!"
+        <div style={{backgroundColor: "white"}}>Awaiting computation...</div> :
+        permutations.set.size > 0 ?
+        <Permutations permutations={permutations} /> :
+        <div style={{backgroundColor: "white"}}>Empty</div>
       }
     </div>
   </div>

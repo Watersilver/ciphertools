@@ -25,7 +25,8 @@ const isSafe = (
   permutation: number[],
   adjacencyConstraints: AdjacencyConstraints,
   l: number,
-  r: number
+  r: number,
+  fixedPositions: ReadonlySet<number>
 ) => {
 
   // console.log("going from", permutation.join(", "));
@@ -34,13 +35,13 @@ const isSafe = (
   swap(permutation, l, r);
 
   // Receive relevant permutation keys
-  const k1_left = permutation[l - 1];
+  const k1_left = fixedPositions.has(l - 1) ? permutation[l - 1] : undefined;
   const k1 = permutation[l];
-  const k1_right = permutation[l + 1];
+  const k1_right = fixedPositions.has(l + 1) ? permutation[l + 1] : undefined;
 
-  const k2_left = permutation[r - 1];
+  const k2_left = fixedPositions.has(r - 1) ? permutation[r - 1] : undefined;
   const k2 = permutation[r];
-  const k2_right = permutation[r + 1];
+  const k2_right = fixedPositions.has(r + 1) ? permutation[r + 1] : undefined;
 
   // console.log("to", permutation.join(", "));
 
@@ -81,14 +82,18 @@ const fa = (
   adjacencyConstraints: AdjacencyConstraints,
   l: number,
   r: number,
+  fixedPositions: ReadonlySet<number>,
   onPermutationDone: (permutation: ReadonlyArray<number>) => void
 ) => {
-  // We reach here only when permutation is valid
-  if (l === r) {
 
-    // console.log("=-=-=-=-=-=-=-=-=-=-=");
-    // console.log("=-=-=-=-DONE=-=-=-=-=");
-    // console.log("=-=-=-=-=-=-=-=-=-=-=");
+  const fp = new Set(fixedPositions);
+  fp.add(l);
+
+  // We reach here only when permutation is valid
+  if (l === r && isSafe(permutation, adjacencyConstraints, l, r, fp)) {
+    // console.log("---------------------");
+    // console.log("--------DONE---------");
+    // console.log("---------------------");
     onPermutationDone(permutation);
     return;
   }
@@ -97,9 +102,9 @@ const fa = (
   for (let i = l; i <= r; i++) {
 
     // Fix str[i] only if it is a valid move.
-    if (isSafe(permutation, adjacencyConstraints, l, i)) {
+    if (isSafe(permutation, adjacencyConstraints, l, i, fp)) {
       swap(permutation, l, i);
-      fa(matrix, permutation, adjacencyConstraints, l + 1, r, onPermutationDone);
+      fa(matrix, permutation, adjacencyConstraints, l + 1, r, fp, onPermutationDone);
       swap(permutation, l, i);
     }
   }
@@ -113,9 +118,9 @@ const forbidAdjacency = (
 
   const adjacencyConstraints = getAdjacencyConstraintsFromMatrix(matrix, (cell1, cell2) => cell1 === cell2);
 
-  console.log(adjacencyConstraints);
+  const fixedPositions = new Set<number>();
 
-  fa(matrix, permutation, adjacencyConstraints, 0, permutation.length - 1, onPermutationDone);
+  fa(matrix, permutation, adjacencyConstraints, 0, permutation.length - 1, fixedPositions, onPermutationDone);
 }
 
 export default forbidAdjacency
